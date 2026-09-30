@@ -58,7 +58,7 @@ const STR = {
         r9: "有人到 150，或到 50 及以下，对战结束。分高者做家务。平分再打。"
     },
     en: {
-        title: "Rooms",
+        title: "Chores",
         enter: "Enter",
         name: "Name",
         them: "Them",
