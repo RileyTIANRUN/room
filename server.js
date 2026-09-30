@@ -183,12 +183,7 @@ io.on("connection", (socket) => {
 
             socket.emit("observer");
 
-            socket.emit("gameState",{
-                stage:game.stage,
-                firstPlayer:firstPlayer,
-                p1Score:game.p1Score,
-                p2Score:game.p2Score
-            });
+            socket.emit("todoUpdate", snapshot());
 
             return;
         }
@@ -198,22 +193,19 @@ io.on("connection", (socket) => {
 
         console.log(socket.id, "joined as", role);
 
-        if (Object.keys(players).length === 2) {
+        socket.emit("todoUpdate", snapshot());
 
-            game.stage = "pickChore";
-            contest.phase = "pick";
-
-            for (let id in players) {
-
-                io.to(id).emit("startGame", {
-                    role: players[id],
-                    p1Score: game.p1Score,
-                    p2Score: game.p2Score,
-                    firstPlayer:firstPlayer
-                });
-
-            }
-
+        if (Object.keys(players).length === 2 && contest.phase === "play") {
+            // second player reconnected during an active match
+            io.to(socket.id).emit("contestResume", {
+                role: role,
+                p1Score: game.p1Score,
+                p2Score: game.p2Score,
+                firstPlayer: firstPlayer,
+                stage: game.stage,
+                names: contest.names,
+                chore: contest.contested
+            });
             broadcastState();
         }
 
@@ -224,10 +216,13 @@ io.on("connection", (socket) => {
     socket.on("pickChore", (payload) => {
 
         const role = players[socket.id];
-        if (!role || game.stage !== "pickChore") return;
+        if (!role) return;
+        if (contest.phase !== "pick") return;
+        if (contest.picks[role]) return;
 
         const chore = payload && payload.chore;
         if (!CHORES.includes(chore)) return;
+        if (contest.assignment[chore]) return;
 
         const raw = payload.name == null ? "" : String(payload.name);
         const name = raw.trim().slice(0, 8) || (role === "player1" ? "P1" : "P2");
@@ -522,7 +517,15 @@ io.on("connection", (socket) => {
 
         if(players[socket.id]){
 
+            const role = players[socket.id];
             delete players[socket.id];
+
+            if (contest.phase === "play") {
+                // keep match alive briefly so a reconnect can resume
+                console.log("Player left during match, waiting for reconnect");
+                io.emit("playerPaused", { role: role });
+                return;
+            }
 
             console.log("Player disconnected, resetting game");
 
@@ -569,13 +572,16 @@ function resolvePicks() {
     contest.phase = "play";
     game.stage = "select";
 
-    io.emit("contestStart", {
-        chore: a,
-        names: contest.names,
-        firstPlayer: firstPlayer,
-        p1Score: game.p1Score,
-        p2Score: game.p2Score
-    });
+    for (let id in players) {
+        io.to(id).emit("contestStart", {
+            role: players[id],
+            chore: a,
+            names: contest.names,
+            firstPlayer: firstPlayer,
+            p1Score: game.p1Score,
+            p2Score: game.p2Score
+        });
+    }
 
     broadcastState();
 

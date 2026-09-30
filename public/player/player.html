@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-<title>分房</title>
+<title>对战</title>
 <link rel="stylesheet" href="player.css">
 </head>
 <body class="phase-wait">
@@ -12,7 +12,6 @@
 
 <header>
   <div class="who" id="meBox">
-    <input id="nameInput" maxlength="8" placeholder="名字" autocomplete="off" hidden>
     <b id="meName" hidden></b>
     <i id="meBadge" hidden></i>
     <span id="meEmoji"></span>
@@ -31,19 +30,7 @@
 
 <p id="hint">等待</p>
 
-<div id="planWrap" hidden>
-  <div id="choreGrid">
-    <div class="choreCard choice" data-chore="dishes" role="button" tabindex="0"><span class="ico">🍽️</span><span class="lbl" data-key="dishes">刷碗</span></div>
-    <div class="choreCard choice" data-chore="mop" role="button" tabindex="0"><span class="ico">🧹</span><span class="lbl" data-key="mop">拖地</span></div>
-    <div class="choreCard choice" data-chore="trash" role="button" tabindex="0"><span class="ico">🗑️</span><span class="lbl" data-key="trash">扔垃圾</span></div>
-    <div class="choreCard choice" data-chore="sweep" role="button" tabindex="0"><span class="ico">🧽</span><span class="lbl" data-key="sweep">扫地</span></div>
-    <div class="choreCard choice" data-chore="package" role="button" tabindex="0"><span class="ico">📦</span><span class="lbl" data-key="package">拿快递</span></div>
-  </div>
-  <button id="pickConfirm" type="button">确定</button>
-  <p id="selectedChore" hidden></p>
-</div>
-
-<div id="gameView" hidden>
+<div id="gameView">
   <div id="selectArea" hidden>
     <button type="button" class="hand" data-hand="rock">🤜</button>
     <button type="button" class="hand" data-hand="paper">🫱</button>

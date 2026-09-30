@@ -31,18 +31,6 @@ header {
 #meBox { text-align: left; }
 #oppBox { text-align: right; }
 
-#nameInput {
-    width: 112px;
-    border: none;
-    border-bottom: 1.5px solid #1c1915;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    font-size: 16px;
-    padding: 4px 0;
-    outline: none;
-}
-
 #meName, #oppName {
     font-size: 16px;
     font-weight: 650;
@@ -105,71 +93,13 @@ header {
     font-size: 15px;
 }
 
-#planWrap {
-    background: #d3cbbd;
-    border-radius: 16px;
-    padding: 12px;
+#gameView {
+    display: none;
 }
 
-#choreGrid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-}
-
-.choreCard {
-    border-radius: 12px;
-    border: 1.5px solid #1c1915;
-    background: #fbf8f3;
-    min-height: 96px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 8px;
-}
-
-.choreCard .ico { font-size: 32px; }
-.choreCard .lbl { font-size: 13px; letter-spacing: 0.08em; }
-
-.choreCard.selected {
-    background: #1c1915;
-    color: #f7f4ee;
-}
-
-.choreCard.taken {
-    background: #234536;
-    color: #f7f4ee;
-    border-color: #234536;
-}
-
-.choreCard.open {
-    border-width: 3px;
-    border-color: #2f6f4e;
-}
-
-body.phase-pick .choreCard { cursor: pointer; }
-
-#pickConfirm,
-.confirm {
-    width: 100%;
-    margin-top: 12px;
-    border: none;
-    border-radius: 12px;
-    background: #1c1915;
-    color: #f7f4ee;
-    padding: 12px;
-    letter-spacing: 0.22em;
-    font-size: 16px;
-}
-
-#pickConfirm:disabled { opacity: 0.45; }
-
-#pickConfirm:active,
-.confirm:active,
-.confirm.active {
-    transform: scale(0.98);
+body.phase-play #gameView,
+body.phase-final #gameView {
+    display: block;
 }
 
 #selectArea,

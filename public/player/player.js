@@ -1,15 +1,7 @@
 const socket = io(location.hostname.endsWith(".vercel.app") ? { transports: ["websocket"] } : {});
 
-const CHORES = [
-    { id: "dishes", icon: "🍽️" },
-    { id: "mop", icon: "🧹" },
-    { id: "trash", icon: "🗑️" },
-    { id: "sweep", icon: "🧽" },
-    { id: "package", icon: "📦" }
-];
 const HAND = { rock: "🤜", paper: "🫱", scissors: "✌️" };
 
-const nameInput = document.getElementById("nameInput");
 const meName = document.getElementById("meName");
 const meBadge = document.getElementById("meBadge");
 const meScore = document.getElementById("meScore");
@@ -21,10 +13,6 @@ const oppBox = document.getElementById("oppBox");
 const roomChip = document.getElementById("roomChip");
 const countdown = document.getElementById("countdown");
 const hintEl = document.getElementById("hint");
-const planWrap = document.getElementById("planWrap");
-const choreGrid = document.getElementById("choreGrid");
-const selectedChore = document.getElementById("selectedChore");
-const pickConfirm = document.getElementById("pickConfirm");
 const gameView = document.getElementById("gameView");
 const selectArea = document.getElementById("selectArea");
 const handConfirm = document.getElementById("handConfirm");
@@ -40,16 +28,12 @@ let myRole = "";
 let firstPlayer = "";
 let phase = "wait";
 let names = { player1: "", player2: "" };
-let assignment = {};
-let selectedChoreId = "";
-let pickLocked = false;
-let loserRole = "";
+let shownChore = "";
 let mySelected = "";
 let selectedAction = "";
 let actionLocked = false;
 let timer = null;
 let hintState = { key: "wait" };
-let shownChore = "";
 let foldArmed = false;
 
 socket.emit("joinGame");
@@ -74,7 +58,7 @@ function renderHint() {
 
 function setPhase(name) {
     phase = name;
-    document.body.classList.remove("phase-wait", "phase-pick", "phase-play", "phase-loser", "phase-done");
+    document.body.classList.remove("phase-wait", "phase-play", "phase-final");
     document.body.classList.add("phase-" + name);
 }
 
@@ -85,7 +69,6 @@ function applyLanguage() {
     document.title = t("title");
     langBtn.textContent = english ? "中" : "EN";
     langBtn.setAttribute("aria-label", t("switchLang"));
-    nameInput.placeholder = t("name");
     rulesBtn.setAttribute("aria-label", t("rules"));
     rulesClose.setAttribute("aria-label", t("close"));
     rulesTitle.textContent = t("rules");
@@ -93,10 +76,6 @@ function applyLanguage() {
         if (el.tagName === "BUTTON") return;
         el.textContent = t(el.dataset.key);
     });
-    document.querySelectorAll(".choreCard").forEach((card) => {
-        card.setAttribute("aria-label", t(card.dataset.chore));
-    });
-    pickConfirm.textContent = t("ok");
     handConfirm.textContent = t("ok");
     document.querySelectorAll(".confirm").forEach((btn) => {
         btn.textContent = t("ok");
@@ -110,7 +89,6 @@ function applyLanguage() {
     updateBadge();
     renderNames();
     renderHint();
-    paintChores();
 }
 
 function otherRole() {
@@ -141,30 +119,6 @@ function showScores(on) {
     oppScore.hidden = !on;
 }
 
-function isTaken(chore) {
-    return assignment[chore] != null;
-}
-
-function paintChores() {
-    choreGrid.querySelectorAll(".choreCard").forEach((card) => {
-        const id = card.dataset.chore;
-        const ownerRole = assignment[id];
-        const ownerName = ownerRole ? (names[ownerRole] || "") : "";
-        card.classList.remove("selected", "taken", "open");
-        if (ownerName) card.classList.add("taken");
-        const ico = card.querySelector(".ico");
-        if (ownerName) {
-            ico.textContent = ownerName;
-        } else {
-            const found = CHORES.find((c) => c.id === id);
-            if (found) ico.textContent = found.icon;
-        }
-        if (phase === "pick" && selectedChoreId === id) card.classList.add("selected");
-        if (phase === "loser" && !ownerRole && myRole === loserRole) card.classList.add("open");
-        if (phase === "loser" && selectedChoreId === id && !ownerRole) card.classList.add("selected");
-    });
-}
-
 function clearActions() {
     actionArea.innerHTML = "";
 }
@@ -176,87 +130,6 @@ function showSelect() {
 
 function hideSelect() {
     selectArea.hidden = true;
-}
-
-function showWait() {
-    setPhase("wait");
-    planWrap.hidden = true;
-    gameView.hidden = true;
-    pickConfirm.hidden = true;
-    nameInput.hidden = true;
-    meName.hidden = true;
-    meBadge.hidden = true;
-    roomChip.hidden = true;
-    countdown.hidden = true;
-    showScores(false);
-    selectedChore.hidden = true;
-    clearActions();
-    foldArmed = false;
-    foldBtn.hidden = true;
-    foldBtn.classList.remove("armed");
-    setHint("wait");
-}
-
-function showPick() {
-    setPhase("pick");
-    planWrap.hidden = false;
-    gameView.hidden = true;
-    pickConfirm.hidden = false;
-    pickConfirm.disabled = false;
-    nameInput.hidden = false;
-    meName.hidden = true;
-    roomChip.hidden = true;
-    countdown.hidden = true;
-    showScores(false);
-    selectedChoreId = "";
-    pickLocked = false;
-    selectedChore.hidden = true;
-    clearActions();
-    foldArmed = false;
-    foldBtn.hidden = true;
-    foldBtn.classList.remove("armed");
-    paintChores();
-    setHint("pick");
-}
-
-function showGame() {
-    setPhase("play");
-    planWrap.hidden = true;
-    gameView.hidden = false;
-    pickConfirm.hidden = true;
-    nameInput.hidden = true;
-    meName.hidden = false;
-    roomChip.hidden = false;
-    showScores(true);
-    showSelect();
-    clearActions();
-    foldArmed = false;
-    foldBtn.hidden = false;
-    foldBtn.classList.remove("armed");
-    foldBtn.textContent = t("fold");
-    updateBadge();
-}
-
-function showDone(withScores) {
-    setPhase("done");
-    planWrap.hidden = false;
-    gameView.hidden = true;
-    pickConfirm.hidden = true;
-    nameInput.hidden = true;
-    meName.hidden = false;
-    meBadge.hidden = true;
-    roomChip.hidden = true;
-    countdown.hidden = true;
-    showScores(withScores);
-    selectedChore.hidden = true;
-    clearInterval(timer);
-    clearActions();
-    foldArmed = false;
-    foldBtn.hidden = true;
-    foldBtn.classList.remove("armed");
-    oppBox.classList.remove("ready");
-    paintChores();
-    setHint("done");
 }
 
 function startTimer() {
@@ -309,60 +182,6 @@ function addConfirmButton() {
     });
     actionArea.appendChild(btn);
 }
-
-function confirmPick() {
-    if (phase === "pick") {
-        if (!selectedChoreId) {
-            setHint("pick");
-            return;
-        }
-        pickLocked = true;
-        pickConfirm.disabled = true;
-        const typed = nameInput.value.trim().slice(0, 8);
-        meName.textContent = typed || (myRole === "player1" ? "P1" : "P2");
-        nameInput.hidden = true;
-        meName.hidden = false;
-        socket.emit("pickChore", { name: typed, chore: selectedChoreId });
-        setHint("wait");
-        return;
-    }
-
-    if (phase === "loser" && myRole === loserRole) {
-        if (!selectedChoreId) {
-            setHint("again");
-            return;
-        }
-        pickConfirm.disabled = true;
-        socket.emit("pickRemaining", selectedChoreId);
-        setHint("wait");
-    }
-}
-
-choreGrid.addEventListener("click", (event) => {
-    const card = event.target.closest(".choreCard");
-    if (!card) return;
-    const id = card.dataset.chore;
-    if (phase === "pick") {
-        if (pickLocked) return;
-        selectedChoreId = id;
-        selectedChore.hidden = false;
-        selectedChore.textContent = CHORES.find((c) => c.id === id).icon + " " + t(id);
-        paintChores();
-        return;
-    }
-    if (phase === "loser" && myRole === loserRole && !isTaken(id)) {
-        selectedChoreId = id;
-        selectedChore.hidden = false;
-        selectedChore.textContent = CHORES.find((c) => c.id === id).icon + " " + t(id);
-        paintChores();
-    }
-});
-
-pickConfirm.addEventListener("click", confirmPick);
-
-nameInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") confirmPick();
-});
 
 document.querySelectorAll(".hand").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -428,75 +247,62 @@ socket.on("startGame", (data) => {
     myRole = data.role;
     firstPlayer = data.firstPlayer;
     names = { player1: "", player2: "" };
-    assignment = {};
-    shownChore = "";
     renderScores(data.p1Score, data.p2Score);
-    oppBox.classList.remove("ready");
-    showPick();
-});
-
-socket.on("pickStatus", (data) => {
-    names = data.names;
-    renderNames();
-    const oppReady = myRole === "player1" ? data.p2Ready : data.p1Ready;
-    oppBox.classList.toggle("ready", !!oppReady);
-});
-
-socket.on("choreDone", (data) => {
-    names = data.names;
-    assignment = data.assignment;
-    renderNames();
-    showDone(!!data.contested);
+    setHint("wait");
 });
 
 socket.on("contestStart", (data) => {
-    names = data.names;
+    myRole = data.role;
     firstPlayer = data.firstPlayer;
-    renderNames();
-    renderScores(data.p1Score, data.p2Score);
+    names = data.names;
     shownChore = data.chore || "";
     roomChip.textContent = shownChore ? t(shownChore) : "";
+    renderNames();
+    renderScores(data.p1Score, data.p2Score);
     mySelected = "";
     selectedAction = "";
     actionLocked = false;
-    selectedChore.hidden = true;
     document.querySelectorAll(".hand").forEach((item) => item.classList.remove("active"));
-    showGame();
+    meName.hidden = false;
+    meBadge.hidden = true;
+    roomChip.hidden = false;
+    showScores(true);
+    showSelect();
+    clearActions();
+    foldArmed = false;
+    foldBtn.hidden = false;
+    foldBtn.classList.remove("armed");
+    foldBtn.textContent = t("fold");
+    setPhase("play");
     setHint("throw");
     startTimer();
 });
 
-socket.on("loserPick", (data) => {
+socket.on("contestResume", (data) => {
+    myRole = data.role;
+    firstPlayer = data.firstPlayer;
     names = data.names;
-    assignment = data.assignment;
-    loserRole = data.loser;
-    selectedChoreId = "";
+    shownChore = data.chore || "";
+    roomChip.textContent = shownChore ? t(shownChore) : "";
     renderNames();
     renderScores(data.p1Score, data.p2Score);
-    setPhase("loser");
-    planWrap.hidden = false;
-    gameView.hidden = true;
-    nameInput.hidden = true;
     meName.hidden = false;
     meBadge.hidden = true;
-    roomChip.hidden = true;
-    countdown.hidden = true;
+    roomChip.hidden = false;
     showScores(true);
-    clearInterval(timer);
     clearActions();
     foldArmed = false;
-    foldBtn.hidden = true;
+    foldBtn.hidden = false;
     foldBtn.classList.remove("armed");
-    paintChores();
-    if (myRole === data.loser) {
-        pickConfirm.hidden = false;
-        pickConfirm.disabled = false;
-        selectedChore.hidden = true;
-        setHint("again");
+    foldBtn.textContent = t("fold");
+    setPhase("play");
+    setHint("wait");
+    if (data.stage === "select" ||
+        (data.stage === "p1Change" && myRole === firstPlayer) ||
+        (data.stage === "p2Change" && myRole !== firstPlayer)) {
+        showSelect();
     } else {
-        pickConfirm.hidden = true;
-        selectedChore.hidden = true;
-        setHint("wait");
+        hideSelect();
     }
 });
 
@@ -563,6 +369,7 @@ socket.on("finalStage", () => {
     actionLocked = false;
     clearActions();
     startTimer();
+    setPhase("final");
     setHint("show");
     addActionButton("proposeDraw", "🤝", "draw");
     addActionButton("reveal", "🎴", "show");
@@ -596,9 +403,19 @@ socket.on("startNextRound", (data) => {
     meEmoji.textContent = "";
     oppEmoji.textContent = "";
     renderScores(data.p1Score, data.p2Score);
-    showGame();
+    showSelect();
+    clearActions();
+    setPhase("play");
     setHint(data.tie ? "replay" : "throw");
     startTimer();
+});
+
+socket.on("loserPick", () => {
+    window.location.href = "/";
+});
+
+socket.on("choreDone", () => {
+    window.location.href = "/";
 });
 
 socket.on("emoji", (data) => {
@@ -607,19 +424,7 @@ socket.on("emoji", (data) => {
 });
 
 socket.on("playerLeft", () => {
-    clearInterval(timer);
-    mySelected = "";
-    selectedAction = "";
-    actionLocked = false;
-    selectedChoreId = "";
-    pickLocked = false;
-    meEmoji.textContent = "";
-    oppEmoji.textContent = "";
-    oppBox.classList.remove("ready");
-    document.querySelectorAll(".hand").forEach((item) => item.classList.remove("active"));
-    showWait();
-    setHint("left");
-    socket.emit("joinGame");
+    window.location.href = "/";
 });
 
 socket.on("observer", () => {
