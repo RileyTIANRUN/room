@@ -28,7 +28,7 @@ let emojiStatus = {
     player2: ""
 };
 
-const ROOM_IDS = ["master", "second", "small"];
+const CHORES = ["dishes", "mop", "trash", "sweep", "package"];
 
 function freshContest() {
     return {
@@ -36,12 +36,12 @@ function freshContest() {
         picks: { player1: null, player2: null },
         contested: null,
         loser: null,
-        assignment: { master: null, second: null, small: null },
+        assignment: {},
         phase: "pick"
     };
 }
 
-let roomContest = freshContest();
+let contest = freshContest();
 
 /* ================= STATE SYNC ================= */
 
@@ -57,6 +57,7 @@ function broadcastState(){
 
         p1Confirmed:game.p1Confirmed,
         p2Confirmed:game.p2Confirmed
+
     });
 }
 
@@ -102,7 +103,7 @@ function initGame() {
         player2:""
     };
 
-    roomContest = freshContest();
+    contest = freshContest();
 
     console.log("=== FULL INIT ===");
 }
@@ -199,8 +200,8 @@ io.on("connection", (socket) => {
 
         if (Object.keys(players).length === 2) {
 
-            game.stage = "pickRoom";
-            roomContest.phase = "pick";
+            game.stage = "pickChore";
+            contest.phase = "pick";
 
             for (let id in players) {
 
@@ -218,63 +219,62 @@ io.on("connection", (socket) => {
 
     });
 
-    /* ================= ROOMS ================= */
+    /* ================= CHORES ================= */
 
-    socket.on("pickRoom", (payload) => {
+    socket.on("pickChore", (payload) => {
 
         const role = players[socket.id];
-        if (!role || game.stage !== "pickRoom") return;
+        if (!role || game.stage !== "pickChore") return;
 
-        const room = payload && payload.room;
-        if (!ROOM_IDS.includes(room)) return;
+        const chore = payload && payload.chore;
+        if (!CHORES.includes(chore)) return;
 
-        const fallback = role === "player1" ? "P1" : "P2";
         const raw = payload.name == null ? "" : String(payload.name);
-        const name = raw.trim().slice(0, 8) || fallback;
+        const name = raw.trim().slice(0, 8) || (role === "player1" ? "P1" : "P2");
 
-        roomContest.names[role] = name;
-        roomContest.picks[role] = room;
+        contest.names[role] = name;
+        contest.picks[role] = chore;
 
         io.emit("pickStatus", {
-            p1Ready: !!roomContest.picks.player1,
-            p2Ready: !!roomContest.picks.player2,
+            p1Ready: !!contest.picks.player1,
+            p2Ready: !!contest.picks.player2,
             names: {
-                player1: roomContest.picks.player1 ? roomContest.names.player1 : "",
-                player2: roomContest.picks.player2 ? roomContest.names.player2 : ""
+                player1: contest.picks.player1 ? contest.names.player1 : "",
+                player2: contest.picks.player2 ? contest.names.player2 : ""
             }
         });
 
-        if (roomContest.picks.player1 && roomContest.picks.player2) {
+        if (contest.picks.player1 && contest.picks.player2) {
             resolvePicks();
         }
 
     });
 
-    socket.on("pickRemaining", (room) => {
+    socket.on("pickRemaining", (chore) => {
 
         const role = players[socket.id];
         if (!role || game.stage !== "loserPick") return;
-        if (role !== roomContest.loser) return;
-        if (!ROOM_IDS.includes(room)) return;
-        if (room === roomContest.contested) return;
-        if (roomContest.assignment[room]) return;
+        if (role !== contest.loser) return;
+        if (!CHORES.includes(chore)) return;
+        if (chore === contest.contested) return;
+        if (contest.assignment[chore]) return;
 
-        roomContest.assignment[room] = role;
-        roomContest.phase = "done";
+        contest.assignment[chore] = role;
+        contest.phase = "done";
         game.stage = "done";
 
-        io.emit("roomDone", roomSnapshot());
+        io.emit("choreDone", snapshot());
 
     });
 
     socket.on("surrender", () => {
 
         const role = players[socket.id];
-        if (!role || roomContest.phase !== "play") return;
+        if (!role || contest.phase !== "play") return;
 
         const loser = role;
         const winner = role === "player1" ? "player2" : "player1";
-        awardRoom(winner, loser);
+        awardChore(winner, loser);
 
     });
 
@@ -536,42 +536,42 @@ io.on("connection", (socket) => {
 
 });
 
-/* ================= ROOMS ================= */
+/* ================= CHORES ================= */
 
-function roomSnapshot() {
+function snapshot() {
 
     return {
-        names: roomContest.names,
-        assignment: roomContest.assignment,
-        contested: roomContest.contested,
-        loser: roomContest.loser
+        names: contest.names,
+        assignment: contest.assignment,
+        contested: contest.contested,
+        loser: contest.loser
     };
 
 }
 
 function resolvePicks() {
 
-    const a = roomContest.picks.player1;
-    const b = roomContest.picks.player2;
+    const a = contest.picks.player1;
+    const b = contest.picks.player2;
 
     if (a !== b) {
 
-        roomContest.assignment[a] = "player1";
-        roomContest.assignment[b] = "player2";
-        roomContest.phase = "done";
+        contest.assignment[a] = "player1";
+        contest.assignment[b] = "player2";
+        contest.phase = "done";
         game.stage = "done";
-        io.emit("roomDone", roomSnapshot());
+        io.emit("choreDone", snapshot());
         return;
 
     }
 
-    roomContest.contested = a;
-    roomContest.phase = "play";
+    contest.contested = a;
+    contest.phase = "play";
     game.stage = "select";
 
     io.emit("contestStart", {
-        room: a,
-        names: roomContest.names,
+        chore: a,
+        names: contest.names,
         firstPlayer: firstPlayer,
         p1Score: game.p1Score,
         p2Score: game.p2Score
@@ -581,22 +581,22 @@ function resolvePicks() {
 
 }
 
-function awardRoom(winner, loser) {
+function awardChore(winner, loser) {
 
-    if (roomContest.contested) {
-        roomContest.assignment[roomContest.contested] = winner;
+    if (contest.contested) {
+        contest.assignment[contest.contested] = winner;
     }
 
-    roomContest.loser = loser;
-    roomContest.phase = "loserPick";
+    contest.loser = loser;
+    contest.phase = "loserPick";
     game.stage = "loserPick";
 
     io.emit("loserPick", {
         winner: winner,
         loser: loser,
-        contested: roomContest.contested,
-        names: roomContest.names,
-        assignment: roomContest.assignment,
+        contested: contest.contested,
+        names: contest.names,
+        assignment: contest.assignment,
         p1Score: game.p1Score,
         p2Score: game.p2Score
     });
@@ -622,7 +622,7 @@ function settleContest() {
 
     const winner = game.p1Score > game.p2Score ? "player1" : "player2";
     const loser = winner === "player1" ? "player2" : "player1";
-    awardRoom(winner, loser);
+    awardChore(winner, loser);
 
 }
 

@@ -111,36 +111,45 @@ header {
     padding: 12px;
 }
 
-#plan { width: 100%; height: auto; display: block; }
-
-#plan text {
-    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-    text-anchor: middle;
-    pointer-events: none;
+#choreGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
 }
 
-#plan .label { font-size: 15px; fill: #1c1915; }
-#plan .who { font-size: 18px; font-weight: 700; fill: #f7f4ee; }
-#plan .room rect { stroke: #1c1915; stroke-width: 2; }
-#plan .room.choice rect { fill: #fbf8f3; }
-#plan .room.fixed rect { fill: #e4ddd2; }
-#plan .room.fixed .label { fill: #6d675e; font-size: 13px; }
-
-#plan .room.selected rect,
-#plan .room.taken rect { fill: #234536; }
-#plan .room.selected .label,
-#plan .room.taken .label { fill: #f7f4ee; }
-
-#plan .room.open rect {
-    fill: #fbf8f3;
-    stroke: #2f6f4e;
-    stroke-width: 3;
+.choreCard {
+    border-radius: 12px;
+    border: 1.5px solid #1c1915;
+    background: #fbf8f3;
+    min-height: 96px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px;
 }
 
-#plan .room.selected.open rect { fill: #2f6f4e; }
+.choreCard .ico { font-size: 32px; }
+.choreCard .lbl { font-size: 13px; letter-spacing: 0.08em; }
 
-body.phase-pick #plan .room.choice,
-#plan .room.open { cursor: pointer; }
+.choreCard.selected {
+    background: #1c1915;
+    color: #f7f4ee;
+}
+
+.choreCard.taken {
+    background: #234536;
+    color: #f7f4ee;
+    border-color: #234536;
+}
+
+.choreCard.open {
+    border-width: 3px;
+    border-color: #2f6f4e;
+}
+
+body.phase-pick .choreCard { cursor: pointer; }
 
 #pickConfirm,
 .confirm {

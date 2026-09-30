@@ -1,5 +1,12 @@
 const socket = io(location.hostname.endsWith(".vercel.app") ? { transports: ["websocket"] } : {});
 
+const CHORES = [
+    { id: "dishes", icon: "🍽️" },
+    { id: "mop", icon: "🧹" },
+    { id: "trash", icon: "🗑️" },
+    { id: "sweep", icon: "🧽" },
+    { id: "package", icon: "📦" }
+];
 const HAND = { rock: "🤜", paper: "🫱", scissors: "✌️" };
 
 const nameInput = document.getElementById("nameInput");
@@ -15,7 +22,8 @@ const roomChip = document.getElementById("roomChip");
 const countdown = document.getElementById("countdown");
 const hintEl = document.getElementById("hint");
 const planWrap = document.getElementById("planWrap");
-const plan = document.getElementById("plan");
+const choreGrid = document.getElementById("choreGrid");
+const selectedChore = document.getElementById("selectedChore");
 const pickConfirm = document.getElementById("pickConfirm");
 const gameView = document.getElementById("gameView");
 const selectArea = document.getElementById("selectArea");
@@ -32,8 +40,8 @@ let myRole = "";
 let firstPlayer = "";
 let phase = "wait";
 let names = { player1: "", player2: "" };
-let assignment = { master: null, second: null, small: null };
-let selectedRoom = "";
+let assignment = {};
+let selectedChoreId = "";
 let pickLocked = false;
 let loserRole = "";
 let mySelected = "";
@@ -41,7 +49,7 @@ let selectedAction = "";
 let actionLocked = false;
 let timer = null;
 let hintState = { key: "wait" };
-let shownRoom = "";
+let shownChore = "";
 let foldArmed = false;
 
 socket.emit("joinGame");
@@ -81,13 +89,12 @@ function applyLanguage() {
     rulesBtn.setAttribute("aria-label", t("rules"));
     rulesClose.setAttribute("aria-label", t("close"));
     rulesTitle.textContent = t("rules");
-    plan.setAttribute("aria-label", t("plan"));
     document.querySelectorAll("[data-key]").forEach((el) => {
         if (el.tagName === "BUTTON") return;
         el.textContent = t(el.dataset.key);
     });
-    document.querySelectorAll(".room.choice").forEach((room) => {
-        room.setAttribute("aria-label", t(room.dataset.room));
+    document.querySelectorAll(".choreCard").forEach((card) => {
+        card.setAttribute("aria-label", t(card.dataset.chore));
     });
     pickConfirm.textContent = t("ok");
     handConfirm.textContent = t("ok");
@@ -98,11 +105,12 @@ function applyLanguage() {
         const label = btn.querySelector(".lbl");
         if (label && btn.dataset.key) label.textContent = t(btn.dataset.key);
     });
-    if (shownRoom) roomChip.textContent = t(shownRoom);
+    if (shownChore) roomChip.textContent = t(shownChore);
     foldBtn.textContent = foldArmed ? t("ok") : t("fold");
     updateBadge();
     renderNames();
     renderHint();
+    paintChores();
 }
 
 function otherRole() {
@@ -133,36 +141,27 @@ function showScores(on) {
     oppScore.hidden = !on;
 }
 
-function placeLabel(roomEl, ownerName) {
-    const rect = roomEl.querySelector("rect");
-    const label = roomEl.querySelector(".label");
-    const who = roomEl.querySelector(".who");
-    const cx = Number(rect.getAttribute("x")) + Number(rect.getAttribute("width")) / 2;
-    const cy = Number(rect.getAttribute("y")) + Number(rect.getAttribute("height")) / 2;
-    label.setAttribute("x", cx);
-    if (!who) return;
-    who.setAttribute("x", cx);
-    if (ownerName) {
-        label.setAttribute("y", cy - 6);
-        who.setAttribute("y", cy + 16);
-        who.textContent = ownerName;
-    } else {
-        label.setAttribute("y", cy + 5);
-        who.textContent = "";
-    }
+function isTaken(chore) {
+    return assignment[chore] != null;
 }
 
-function paintPlan(mode) {
-    plan.querySelectorAll(".room.choice").forEach((roomEl) => {
-        const id = roomEl.dataset.room;
+function paintChores() {
+    choreGrid.querySelectorAll(".choreCard").forEach((card) => {
+        const id = card.dataset.chore;
         const ownerRole = assignment[id];
         const ownerName = ownerRole ? (names[ownerRole] || "") : "";
-        roomEl.classList.remove("selected", "taken", "open");
-        if (ownerName) roomEl.classList.add("taken");
-        if (mode === "pick" && selectedRoom === id) roomEl.classList.add("selected");
-        if (mode === "loser" && !ownerRole && myRole === loserRole) roomEl.classList.add("open");
-        if (mode === "loser" && selectedRoom === id && !ownerRole) roomEl.classList.add("selected");
-        placeLabel(roomEl, ownerName);
+        card.classList.remove("selected", "taken", "open");
+        if (ownerName) card.classList.add("taken");
+        const ico = card.querySelector(".ico");
+        if (ownerName) {
+            ico.textContent = ownerName;
+        } else {
+            const found = CHORES.find((c) => c.id === id);
+            if (found) ico.textContent = found.icon;
+        }
+        if (phase === "pick" && selectedChoreId === id) card.classList.add("selected");
+        if (phase === "loser" && !ownerRole && myRole === loserRole) card.classList.add("open");
+        if (phase === "loser" && selectedChoreId === id && !ownerRole) card.classList.add("selected");
     });
 }
 
@@ -190,6 +189,7 @@ function showWait() {
     roomChip.hidden = true;
     countdown.hidden = true;
     showScores(false);
+    selectedChore.hidden = true;
     clearActions();
     foldArmed = false;
     foldBtn.hidden = true;
@@ -208,13 +208,14 @@ function showPick() {
     roomChip.hidden = true;
     countdown.hidden = true;
     showScores(false);
-    selectedRoom = "";
+    selectedChoreId = "";
     pickLocked = false;
+    selectedChore.hidden = true;
     clearActions();
     foldArmed = false;
     foldBtn.hidden = true;
     foldBtn.classList.remove("armed");
-    paintPlan("pick");
+    paintChores();
     setHint("pick");
 }
 
@@ -247,13 +248,14 @@ function showDone(withScores) {
     roomChip.hidden = true;
     countdown.hidden = true;
     showScores(withScores);
+    selectedChore.hidden = true;
     clearInterval(timer);
     clearActions();
     foldArmed = false;
     foldBtn.hidden = true;
     foldBtn.classList.remove("armed");
     oppBox.classList.remove("ready");
-    paintPlan("done");
+    paintChores();
     setHint("done");
 }
 
@@ -310,7 +312,7 @@ function addConfirmButton() {
 
 function confirmPick() {
     if (phase === "pick") {
-        if (!selectedRoom) {
+        if (!selectedChoreId) {
             setHint("pick");
             return;
         }
@@ -320,37 +322,39 @@ function confirmPick() {
         meName.textContent = typed || (myRole === "player1" ? "P1" : "P2");
         nameInput.hidden = true;
         meName.hidden = false;
-        socket.emit("pickRoom", { name: typed, room: selectedRoom });
+        socket.emit("pickChore", { name: typed, chore: selectedChoreId });
         setHint("wait");
         return;
     }
 
     if (phase === "loser" && myRole === loserRole) {
-        if (!selectedRoom) {
+        if (!selectedChoreId) {
             setHint("again");
             return;
         }
         pickConfirm.disabled = true;
-        socket.emit("pickRemaining", selectedRoom);
+        socket.emit("pickRemaining", selectedChoreId);
         setHint("wait");
     }
 }
 
-plan.addEventListener("click", (event) => {
-    const roomEl = event.target.closest(".room.choice");
-    if (!roomEl) return;
-    const id = roomEl.dataset.room;
-
+choreGrid.addEventListener("click", (event) => {
+    const card = event.target.closest(".choreCard");
+    if (!card) return;
+    const id = card.dataset.chore;
     if (phase === "pick") {
         if (pickLocked) return;
-        selectedRoom = id;
-        paintPlan("pick");
+        selectedChoreId = id;
+        selectedChore.hidden = false;
+        selectedChore.textContent = CHORES.find((c) => c.id === id).icon + " " + t(id);
+        paintChores();
         return;
     }
-
-    if (phase === "loser" && myRole === loserRole && !assignment[id]) {
-        selectedRoom = id;
-        paintPlan("loser");
+    if (phase === "loser" && myRole === loserRole && !isTaken(id)) {
+        selectedChoreId = id;
+        selectedChore.hidden = false;
+        selectedChore.textContent = CHORES.find((c) => c.id === id).icon + " " + t(id);
+        paintChores();
     }
 });
 
@@ -400,11 +404,32 @@ rulesSheet.addEventListener("click", (event) => {
     if (event.target === rulesSheet) rulesSheet.hidden = true;
 });
 
+langBtn.addEventListener("click", () => {
+    toggleLang();
+    applyLanguage();
+});
+
+foldBtn.addEventListener("click", () => {
+    if (phase !== "play") return;
+    if (!foldArmed) {
+        foldArmed = true;
+        foldBtn.classList.add("armed");
+        foldBtn.textContent = t("ok");
+        return;
+    }
+    foldArmed = false;
+    foldBtn.classList.remove("armed");
+    socket.emit("surrender");
+});
+
+applyLanguage();
+
 socket.on("startGame", (data) => {
     myRole = data.role;
     firstPlayer = data.firstPlayer;
     names = { player1: "", player2: "" };
-    assignment = { master: null, second: null, small: null };
+    assignment = {};
+    shownChore = "";
     renderScores(data.p1Score, data.p2Score);
     oppBox.classList.remove("ready");
     showPick();
@@ -417,7 +442,7 @@ socket.on("pickStatus", (data) => {
     oppBox.classList.toggle("ready", !!oppReady);
 });
 
-socket.on("roomDone", (data) => {
+socket.on("choreDone", (data) => {
     names = data.names;
     assignment = data.assignment;
     renderNames();
@@ -429,11 +454,12 @@ socket.on("contestStart", (data) => {
     firstPlayer = data.firstPlayer;
     renderNames();
     renderScores(data.p1Score, data.p2Score);
-    shownRoom = data.room || "";
-    roomChip.textContent = shownRoom ? t(shownRoom) : "";
+    shownChore = data.chore || "";
+    roomChip.textContent = shownChore ? t(shownChore) : "";
     mySelected = "";
     selectedAction = "";
     actionLocked = false;
+    selectedChore.hidden = true;
     document.querySelectorAll(".hand").forEach((item) => item.classList.remove("active"));
     showGame();
     setHint("throw");
@@ -444,7 +470,7 @@ socket.on("loserPick", (data) => {
     names = data.names;
     assignment = data.assignment;
     loserRole = data.loser;
-    selectedRoom = "";
+    selectedChoreId = "";
     renderNames();
     renderScores(data.p1Score, data.p2Score);
     setPhase("loser");
@@ -461,13 +487,15 @@ socket.on("loserPick", (data) => {
     foldArmed = false;
     foldBtn.hidden = true;
     foldBtn.classList.remove("armed");
-    paintPlan("loser");
+    paintChores();
     if (myRole === data.loser) {
         pickConfirm.hidden = false;
         pickConfirm.disabled = false;
+        selectedChore.hidden = true;
         setHint("again");
     } else {
         pickConfirm.hidden = true;
+        selectedChore.hidden = true;
         setHint("wait");
     }
 });
@@ -583,7 +611,7 @@ socket.on("playerLeft", () => {
     mySelected = "";
     selectedAction = "";
     actionLocked = false;
-    selectedRoom = "";
+    selectedChoreId = "";
     pickLocked = false;
     meEmoji.textContent = "";
     oppEmoji.textContent = "";
@@ -593,26 +621,6 @@ socket.on("playerLeft", () => {
     setHint("left");
     socket.emit("joinGame");
 });
-
-langBtn.addEventListener("click", () => {
-    toggleLang();
-    applyLanguage();
-});
-
-foldBtn.addEventListener("click", () => {
-    if (phase !== "play") return;
-    if (!foldArmed) {
-        foldArmed = true;
-        foldBtn.classList.add("armed");
-        foldBtn.textContent = t("ok");
-        return;
-    }
-    foldArmed = false;
-    foldBtn.classList.remove("armed");
-    socket.emit("surrender");
-});
-
-applyLanguage();
 
 socket.on("observer", () => {
     window.location.href = "/observer/observer.html";

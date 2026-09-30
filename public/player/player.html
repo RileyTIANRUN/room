@@ -32,36 +32,15 @@
 <p id="hint">等待</p>
 
 <div id="planWrap" hidden>
-  <svg id="plan" viewBox="0 0 332 292" aria-label="套三户型">
-    <g class="room choice" data-room="master" role="button" tabindex="0">
-      <rect x="0" y="0" width="176" height="128" rx="3"></rect>
-      <text class="label" data-key="master" x="88" y="64">主卧</text>
-      <text class="who" x="88" y="86"></text>
-    </g>
-    <g class="room choice" data-room="second" role="button" tabindex="0">
-      <rect x="182" y="0" width="150" height="128" rx="3"></rect>
-      <text class="label" data-key="second" x="257" y="64">次卧</text>
-      <text class="who" x="257" y="86"></text>
-    </g>
-    <g class="room fixed">
-      <rect x="0" y="134" width="176" height="158" rx="3"></rect>
-      <text class="label" data-key="living" x="88" y="213">客厅</text>
-    </g>
-    <g class="room choice" data-room="small" role="button" tabindex="0">
-      <rect x="182" y="134" width="150" height="88" rx="3"></rect>
-      <text class="label" data-key="small" x="257" y="178">小卧</text>
-      <text class="who" x="257" y="198"></text>
-    </g>
-    <g class="room fixed">
-      <rect x="182" y="228" width="72" height="64" rx="3"></rect>
-      <text class="label" data-key="kitchen" x="218" y="264">厨房</text>
-    </g>
-    <g class="room fixed">
-      <rect x="260" y="228" width="72" height="64" rx="3"></rect>
-      <text class="label" data-key="bath" x="296" y="264">卫</text>
-    </g>
-  </svg>
+  <div id="choreGrid">
+    <div class="choreCard choice" data-chore="dishes" role="button" tabindex="0"><span class="ico">🍽️</span><span class="lbl" data-key="dishes">刷碗</span></div>
+    <div class="choreCard choice" data-chore="mop" role="button" tabindex="0"><span class="ico">🧹</span><span class="lbl" data-key="mop">拖地</span></div>
+    <div class="choreCard choice" data-chore="trash" role="button" tabindex="0"><span class="ico">🗑️</span><span class="lbl" data-key="trash">扔垃圾</span></div>
+    <div class="choreCard choice" data-chore="sweep" role="button" tabindex="0"><span class="ico">🧽</span><span class="lbl" data-key="sweep">扫地</span></div>
+    <div class="choreCard choice" data-chore="package" role="button" tabindex="0"><span class="ico">📦</span><span class="lbl" data-key="package">拿快递</span></div>
+  </div>
   <button id="pickConfirm" type="button">确定</button>
+  <p id="selectedChore" hidden></p>
 </div>
 
 <div id="gameView" hidden>

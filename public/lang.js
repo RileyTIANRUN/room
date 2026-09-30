@@ -1,12 +1,20 @@
+const CHORES = [
+    { id: "dishes", icon: "🍽️" },
+    { id: "mop", icon: "🧹" },
+    { id: "trash", icon: "🗑️" },
+    { id: "sweep", icon: "🧽" },
+    { id: "package", icon: "📦" }
+];
+
 const STR = {
     zh: {
-        title: "分房",
+        title: "家务分",
         enter: "进入",
         name: "名字",
         them: "对方",
         ok: "确定",
         fold: "认输",
-        pick: "选一间",
+        pick: "选家务",
         wait: "等待",
         throw: "出拳",
         turn: "你的回合",
@@ -32,23 +40,22 @@ const STR = {
         draw: "平局",
         rules: "规则",
         close: "关闭",
-        plan: "套三户型",
-        master: "主卧",
-        second: "次卧",
-        small: "小卧",
-        living: "客厅",
-        kitchen: "厨房",
-        bath: "卫",
+        plan: "家务",
+        dishes: "刷碗",
+        mop: "拖地",
+        trash: "扔垃圾",
+        sweep: "扫地",
+        package: "拿快递",
         switchLang: "English",
-        r1: "两人各选一间。不同就分完。相同就对战。",
-        r2: "赢的人得到那间，输的人再选剩下的。",
+        r1: "两人各选一个家务。不同就直接分配。相同就进入对战。",
+        r2: "赢的人做那个家务，输的人从剩下的家务里再选。",
         r3: "100 分起。先手每回合轮换。",
         r4: "先暗选出拳。",
         r5: "先手可以偷看或加倍。偷看后可以改拳。",
         r6: "后手可以查偷看、查输赢或加倍。查看后可以改拳。",
         r7: "之后可以一起认平，或开牌。",
         r8: "赢 +10。加倍后再赢 +20。输 −10。偷看了还输 −20。平局各 +5。",
-        r9: "有人到 150，或到 50 及以下，对战结束。分高得房。平分再打。"
+        r9: "有人到 150，或到 50 及以下，对战结束。分高者做家务。平分再打。"
     },
     en: {
         title: "Rooms",
@@ -83,23 +90,22 @@ const STR = {
         draw: "Draw",
         rules: "Rules",
         close: "Close",
-        plan: "Three-bedroom plan",
-        master: "Master",
-        second: "Second",
-        small: "Small",
-        living: "Living",
-        kitchen: "Kitchen",
-        bath: "Bath",
+        plan: "Chores",
+        dishes: "Dishes",
+        mop: "Mop",
+        trash: "Trash",
+        sweep: "Sweep",
+        package: "Package",
         switchLang: "中文",
-        r1: "Each person picks a room. Different rooms are settled. The same room starts a match.",
-        r2: "The winner keeps that room. The loser picks from what is left.",
+        r1: "Each person picks a chore. Different chores are settled. The same chore starts a match.",
+        r2: "The winner does that chore. The loser picks from what is left.",
         r3: "Both start at 100. The first move alternates.",
         r4: "Both choose a hand in secret.",
         r5: "The first player may peek or double. After a peek, they may change hands.",
         r6: "The second player may check a peek, check a loss, or double. After a check, they may change hands.",
         r7: "Then both may agree to a draw, or show the hands.",
         r8: "Win +10. A doubled win is +20. A loss is −10. A peeked loss is −20. A draw is +5 each.",
-        r9: "At 150, or at 50 or below, the match ends. The higher score gets the room. A tie plays on."
+        r9: "At 150, or at 50 or below, the match ends. The higher score gets the chore. A tie plays on."
     }
 };
 
