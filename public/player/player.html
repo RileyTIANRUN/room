@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+<title>分房</title>
+<link rel="stylesheet" href="player.css">
+</head>
+<body class="phase-wait">
+
+<div id="app">
+
+<header>
+  <div class="who" id="meBox">
+    <input id="nameInput" maxlength="8" placeholder="名字" autocomplete="off" hidden>
+    <b id="meName" hidden></b>
+    <i id="meBadge" hidden></i>
+    <span id="meEmoji"></span>
+    <strong id="meScore" hidden>100</strong>
+  </div>
+  <div id="mid">
+    <div id="roomChip" hidden></div>
+    <div id="countdown" hidden>20</div>
+  </div>
+  <div class="who" id="oppBox">
+    <b id="oppName">对方</b>
+    <span id="oppEmoji"></span>
+    <strong id="oppScore" hidden>100</strong>
+  </div>
+</header>
+
+<p id="hint">等待</p>
+
+<div id="planWrap" hidden>
+  <svg id="plan" viewBox="0 0 332 292" aria-label="套三户型">
+    <g class="room choice" data-room="master" role="button" tabindex="0">
+      <rect x="0" y="0" width="176" height="128" rx="3"></rect>
+      <text class="label" data-key="master" x="88" y="64">主卧</text>
+      <text class="who" x="88" y="86"></text>
+    </g>
+    <g class="room choice" data-room="second" role="button" tabindex="0">
+      <rect x="182" y="0" width="150" height="128" rx="3"></rect>
+      <text class="label" data-key="second" x="257" y="64">次卧</text>
+      <text class="who" x="257" y="86"></text>
+    </g>
+    <g class="room fixed">
+      <rect x="0" y="134" width="176" height="158" rx="3"></rect>
+      <text class="label" data-key="living" x="88" y="213">客厅</text>
+    </g>
+    <g class="room choice" data-room="small" role="button" tabindex="0">
+      <rect x="182" y="134" width="150" height="88" rx="3"></rect>
+      <text class="label" data-key="small" x="257" y="178">小卧</text>
+      <text class="who" x="257" y="198"></text>
+    </g>
+    <g class="room fixed">
+      <rect x="182" y="228" width="72" height="64" rx="3"></rect>
+      <text class="label" data-key="kitchen" x="218" y="264">厨房</text>
+    </g>
+    <g class="room fixed">
+      <rect x="260" y="228" width="72" height="64" rx="3"></rect>
+      <text class="label" data-key="bath" x="296" y="264">卫</text>
+    </g>
+  </svg>
+  <button id="pickConfirm" type="button">确定</button>
+</div>
+
+<div id="gameView" hidden>
+  <div id="selectArea" hidden>
+    <button type="button" class="hand" data-hand="rock">🤜</button>
+    <button type="button" class="hand" data-hand="paper">🫱</button>
+    <button type="button" class="hand" data-hand="scissors">✌️</button>
+    <button id="handConfirm" type="button" class="confirm">确定</button>
+  </div>
+  <div id="actionArea"></div>
+  <button id="foldBtn" type="button" hidden>认输</button>
+  <div id="emojiButtons">
+    <button type="button" data-emoji="🫣">🫣</button>
+    <button type="button" data-emoji="💩">💩</button>
+    <button type="button" data-emoji="👍">👍</button>
+    <button type="button" data-emoji="🤝">🤝</button>
+    <button type="button" data-emoji="☕️">☕️</button>
+  </div>
+</div>
+
+</div>
+
+<button id="langBtn" type="button"></button>
+<button id="rulesBtn" type="button" aria-label="规则">?</button>
+
+<div id="rulesSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="rulesTitle">
+    <button id="rulesClose" type="button" aria-label="关闭">×</button>
+    <h2 id="rulesTitle">规则</h2>
+    <ul>
+      <li data-key="r1"></li>
+      <li data-key="r2"></li>
+      <li data-key="r3"></li>
+      <li data-key="r4"></li>
+      <li data-key="r5"></li>
+      <li data-key="r6"></li>
+      <li data-key="r7"></li>
+      <li data-key="r8"></li>
+      <li data-key="r9"></li>
+    </ul>
+  </div>
+</div>
+
+<script src="../lang.js"></script>
+<script src="../socket.io/socket.io.js"></script>
+<script src="player.js"></script>
+</body>
+</html>

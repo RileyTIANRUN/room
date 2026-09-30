@@ -1,0 +1,315 @@
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: #e6dfd4;
+    color: #1c1915;
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+button { font: inherit; cursor: pointer; }
+
+[hidden] { display: none !important; }
+
+#app {
+    max-width: 440px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding: 16px 16px 92px;
+}
+
+header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 8px;
+    min-height: 64px;
+}
+
+.who { line-height: 1.2; }
+
+#meBox { text-align: left; }
+#oppBox { text-align: right; }
+
+#nameInput {
+    width: 112px;
+    border: none;
+    border-bottom: 1.5px solid #1c1915;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 16px;
+    padding: 4px 0;
+    outline: none;
+}
+
+#meName, #oppName {
+    font-size: 16px;
+    font-weight: 650;
+}
+
+#meBadge {
+    display: inline-block;
+    margin-left: 6px;
+    font-style: normal;
+    font-size: 12px;
+    line-height: 1.4;
+    border: 1px solid #1c1915;
+    border-radius: 999px;
+    padding: 0 6px;
+    vertical-align: 1px;
+}
+
+#meEmoji, #oppEmoji {
+    display: block;
+    min-height: 1.1em;
+    font-size: 18px;
+}
+
+#meScore, #oppScore {
+    display: block;
+    margin-top: 2px;
+    font-size: 28px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+#oppBox.ready #oppName::after {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-left: 6px;
+    border-radius: 50%;
+    background: #2f6f4e;
+    vertical-align: 1px;
+}
+
+#mid { text-align: center; min-width: 52px; }
+
+#roomChip {
+    font-size: 13px;
+    letter-spacing: 0.14em;
+}
+
+#countdown {
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+}
+
+#hint {
+    margin: 4px 0 14px;
+    min-height: 1.4em;
+    text-align: center;
+    letter-spacing: 0.14em;
+    font-size: 15px;
+}
+
+#planWrap {
+    background: #d3cbbd;
+    border-radius: 16px;
+    padding: 12px;
+}
+
+#plan { width: 100%; height: auto; display: block; }
+
+#plan text {
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    text-anchor: middle;
+    pointer-events: none;
+}
+
+#plan .label { font-size: 15px; fill: #1c1915; }
+#plan .who { font-size: 18px; font-weight: 700; fill: #f7f4ee; }
+#plan .room rect { stroke: #1c1915; stroke-width: 2; }
+#plan .room.choice rect { fill: #fbf8f3; }
+#plan .room.fixed rect { fill: #e4ddd2; }
+#plan .room.fixed .label { fill: #6d675e; font-size: 13px; }
+
+#plan .room.selected rect,
+#plan .room.taken rect { fill: #234536; }
+#plan .room.selected .label,
+#plan .room.taken .label { fill: #f7f4ee; }
+
+#plan .room.open rect {
+    fill: #fbf8f3;
+    stroke: #2f6f4e;
+    stroke-width: 3;
+}
+
+#plan .room.selected.open rect { fill: #2f6f4e; }
+
+body.phase-pick #plan .room.choice,
+#plan .room.open { cursor: pointer; }
+
+#pickConfirm,
+.confirm {
+    width: 100%;
+    margin-top: 12px;
+    border: none;
+    border-radius: 12px;
+    background: #1c1915;
+    color: #f7f4ee;
+    padding: 12px;
+    letter-spacing: 0.22em;
+    font-size: 16px;
+}
+
+#pickConfirm:disabled { opacity: 0.45; }
+
+#pickConfirm:active,
+.confirm:active,
+.confirm.active {
+    transform: scale(0.98);
+}
+
+#selectArea,
+#actionArea,
+#emojiButtons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.hand,
+.action {
+    width: 96px;
+    height: 84px;
+    border-radius: 14px;
+    border: 1.5px solid #1c1915;
+    background: #fbf8f3;
+    color: inherit;
+}
+
+.hand { font-size: 36px; }
+
+.action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 0;
+}
+
+.action .ico { font-size: 26px; line-height: 1; }
+.action .lbl { font-size: 12px; letter-spacing: 0.02em; }
+
+.hand.active,
+.action.active {
+    background: #1c1915;
+    color: #f7f4ee;
+}
+
+#selectArea .confirm,
+#actionArea .confirm { flex-basis: 100%; }
+
+#foldBtn {
+    display: block;
+    margin: 22px auto 0;
+    background: transparent;
+    color: #1c1915;
+    border: 1.5px solid #1c1915;
+    border-radius: 999px;
+    padding: 8px 22px;
+    letter-spacing: 0.14em;
+}
+
+#foldBtn.armed {
+    background: #1c1915;
+    color: #f7f4ee;
+}
+
+#emojiButtons { margin-top: 28px; }
+
+#emojiButtons button {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    border: 1px solid #c9c1b4;
+    background: transparent;
+    font-size: 22px;
+}
+
+#emojiButtons button:active { transform: scale(0.94); }
+
+#langBtn,
+#rulesBtn {
+    position: fixed;
+    bottom: 16px;
+    z-index: 40;
+    width: 52px;
+    height: 52px;
+    border: none;
+    border-radius: 50%;
+    background: #1c1915;
+    color: #f7f4ee;
+    box-shadow: 0 8px 18px rgba(28, 25, 21, 0.22);
+}
+
+#langBtn {
+    right: 78px;
+    font-size: 15px;
+    letter-spacing: 0;
+}
+
+#rulesBtn {
+    right: 16px;
+    font-size: 22px;
+}
+
+body.en #hint,
+body.en #roomChip {
+    letter-spacing: 0.02em;
+}
+
+#rulesSheet {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: rgba(28, 25, 21, 0.42);
+}
+
+.sheet {
+    position: relative;
+    width: min(440px, 100%);
+    max-height: 78vh;
+    overflow: auto;
+    background: #f7f4ee;
+    border-radius: 18px 18px 0 0;
+    padding: 22px 22px 32px;
+}
+
+.sheet h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    letter-spacing: 0.12em;
+}
+
+.sheet ul {
+    margin: 0;
+    padding-left: 1.15em;
+}
+
+.sheet li {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+#rulesClose {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font-size: 26px;
+    line-height: 1;
+}
